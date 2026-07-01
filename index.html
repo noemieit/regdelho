@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projection patrimoniale – Régis Delhommeau</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --turquoise: #00A88F;
+  --turquoise-dark: #006B5C;
+  --ink: #111827;
+  --ink60: rgba(17,24,39,0.55);
+  --ink35: rgba(17,24,39,0.38);
+  --ink10: rgba(17,24,39,0.08);
+  --surface2: #F7F8F9;
+  --white: #ffffff;
+  --ta30: rgba(0,168,143,0.25);
+  --ta15: rgba(0,168,143,0.09);
+  --font: 'Outfit', Arial, sans-serif;
+  --radius-md: 12px;
+}
+body {
+  background: var(--white);
+  font-family: var(--font);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.hero { padding: 48px 48px 0; }
+.hero-title { font-size: 36px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.1; margin-bottom: 12px; }
+.hero-title span { color: var(--turquoise); }
+.hero-sub { font-size: 14px; color: var(--ink60); max-width: 640px; line-height: 1.7; }
+
+.hypotheses {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 28px 48px 0;
+}
+.hyp-card {
+  background: var(--surface2); border: 1px solid var(--ink10);
+  border-radius: var(--radius-md); padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 4px;
+  position: relative; overflow: hidden;
+}
+.hyp-card::after {
+  content: ''; position: absolute; bottom: -10px; right: -10px;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--ta15); pointer-events: none;
+}
+.hyp-card.total { background: linear-gradient(135deg, var(--turquoise-dark) 0%, #004a3e 100%); border-color: var(--ta30); }
+.hyp-card.total .hyp-label { color: rgba(255,255,255,0.65); }
+.hyp-card.total .hyp-value { color: #ffffff; }
+.hyp-card.total .hyp-sub { color: rgba(255,255,255,0.8); }
+.hyp-card.total.over .hyp-sub { color: #ffd166; }
+
+/* Carte rendement pondéré */
+.hyp-card.weighted {
+  background: linear-gradient(135deg, #00957f 0%, #006B5C 100%);
+  border-color: var(--ta30);
+}
+.hyp-card.weighted .hyp-label { color: rgba(255,255,255,0.65); }
+.hyp-card.weighted .hyp-value { color: #ffffff; font-size: 22px; }
+.hyp-card.weighted .hyp-sub { color: rgba(255,255,255,0.8); }
+.weighted-breakdown {
+  margin-top: 10px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.wb-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 10px;
+}
+.wb-name { color: rgba(255,255,255,0.6); }
+.wb-bar-wrap { flex: 1; margin: 0 8px; height: 3px; background: rgba(255,255,255,0.15); border-radius: 2px; }
+.wb-bar { height: 100%; background: rgba(255,255,255,0.55); border-radius: 2px; transition: width 0.3s; }
+.wb-pct { color: rgba(255,255,255,0.85); font-weight: 600; min-width: 28px; text-align: right; }
+
+.hyp-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink35); font-weight: 500; }
+.hyp-value { font-size: 17px; font-weight: 700; color: var(--ink); }
+.hyp-sub { font-size: 11px; color: var(--turquoise-dark); font-weight: 500; }
+
+.hyp-card.product { padding-bottom: 18px; }
+.hyp-mini-slider {
+  margin-top: 10px;
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px; border-radius: 3px; outline: none; cursor: pointer;
+  position: relative; z-index: 1;
+  background: linear-gradient(to right,
+    var(--turquoise) 0%, var(--turquoise) var(--pct, 50%),
+    rgba(17,24,39,0.12) var(--pct, 50%), rgba(17,24,39,0.12) 100%);
+}
+.hyp-mini-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--white); border: 2.5px solid var(--turquoise); cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(0,168,143,0.15);
+  margin-top: -1px;
+}
+.hyp-mini-slider::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--white); border: 2.5px solid var(--turquoise); cursor: pointer;
+}
+.hyp-mini-range {
+  display: flex; justify-content: space-between;
+  font-size: 9px; color: var(--ink35); margin-top: 4px;
+}
+
+.slider-zone {
+  margin: 32px 48px 0; background: var(--surface2);
+  border: 1px solid var(--ink10); border-radius: 16px;
+  padding: 24px 32px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+}
+.slider-label-group { display: flex; flex-direction: column; gap: 3px; min-width: 180px; }
+.slider-main-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+.slider-hint { font-size: 11px; color: var(--ink35); }
+.slider-control { flex: 1; display: flex; align-items: center; gap: 16px; min-width: 200px; }
+.slider-control input[type=range] {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 5px; border-radius: 3px; outline: none; cursor: pointer;
+  background: linear-gradient(to right,
+    var(--turquoise) 0%, var(--turquoise) var(--pct, 31%),
+    rgba(17,24,39,0.12) var(--pct, 31%), rgba(17,24,39,0.12) 100%);
+}
+.slider-control input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--white); border: 3px solid var(--turquoise); cursor: pointer;
+  box-shadow: 0 0 0 5px rgba(0,168,143,0.15);
+}
+.slider-control input[type=range]::-moz-range-thumb {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--white); border: 3px solid var(--turquoise); cursor: pointer;
+}
+.year-display { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.year-bubble {
+  background: var(--turquoise); color: var(--white);
+  font-size: 22px; font-weight: 800; width: 60px; height: 60px;
+  border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+}
+.year-suffix { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink35); }
+
+.reset-row { padding: 14px 48px 0; display: flex; justify-content: flex-end; }
+.reset-btn {
+  font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--turquoise-dark);
+  background: var(--ta15); border: 1px solid var(--ta30); border-radius: 8px;
+  padding: 8px 16px; cursor: pointer; transition: background 0.15s ease;
+}
+.reset-btn:hover { background: var(--ta30); }
+
+.chart-section { padding: 32px 48px 0; }
+.chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.chart-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink35); font-weight: 500; }
+.legend { display: flex; gap: 20px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink60); }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.chart-wrap { position: relative; width: 100%; height: 320px; }
+
+.kpi-section {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px; padding: 28px 48px 48px;
+}
+.kpi-card {
+  background: var(--surface2); border: 1px solid var(--ink10);
+  border-radius: 16px; padding: 24px 26px;
+  display: flex; flex-direction: column; gap: 6px;
+  position: relative; overflow: hidden;
+}
+.kpi-card.accent {
+  background: linear-gradient(135deg, var(--turquoise-dark) 0%, #004a3e 100%);
+  border-color: var(--ta30);
+}
+.kpi-card::before {
+  content: ''; position: absolute; top: -20px; right: -20px;
+  width: 90px; height: 90px; border-radius: 50%;
+  background: var(--ta15); pointer-events: none;
+}
+.kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink35); font-weight: 500; }
+.kpi-card.accent .kpi-label { color: rgba(255,255,255,0.65); }
+.kpi-value { font-size: 30px; font-weight: 800; letter-spacing: -0.6px; color: var(--ink); }
+.kpi-card.accent .kpi-value { color: #ffffff; }
+.kpi-delta { font-size: 11px; font-weight: 500; margin-top: 2px; color: var(--ink35); }
+.kpi-card.accent .kpi-delta { color: rgba(255,255,255,0.75); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1 class="hero-title">
+    Projection de rentabilité nette de<br>
+    <span>votre stratégie patrimoniale</span>
+  </h1>
+  <p class="hero-sub">
+    Cette projection illustre le potentiel de valorisation de votre stratégie patrimoniale dans le temps,
+    sur la base des hypothèses retenues. Elle tient compte des effets des intérêts composés
+    propres à chaque enveloppe d'investissement. Ajustez les curseurs ci-dessous pour
+    simuler une répartition différente entre les enveloppes.
+  </p>
+</div>
+
+<div class="hypotheses">
+  <div class="hyp-card total" id="totalCard">
+    <div class="hyp-label">Capital initial (fixe)</div>
+    <div class="hyp-value" id="totalValue">25 000 €</div>
+    <div class="hyp-sub" id="totalSub">Répartition ajustable · total constant</div>
+  </div>
+
+  <div class="hyp-card product">
+    <div class="hyp-label">Fonds euros</div>
+    <div class="hyp-value" id="valA">10 000 €</div>
+    <div class="hyp-sub">Court terme · 3,4 % net / an</div>
+    <input type="range" class="hyp-mini-slider" id="sliderA" min="0" max="25000" step="500" value="10000">
+    <div class="hyp-mini-range"><span>0 €</span><span>25 000 €</span></div>
+  </div>
+
+  <div class="hyp-card product">
+    <div class="hyp-label">PS Transitions Leaders</div>
+    <div class="hyp-value" id="valB">5 000 €</div>
+    <div class="hyp-sub">Moyen terme · 8,5 % net / an</div>
+    <input type="range" class="hyp-mini-slider" id="sliderB" min="0" max="25000" step="500" value="5000">
+    <div class="hyp-mini-range"><span>0 €</span><span>25 000 €</span></div>
+  </div>
+
+  <div class="hyp-card product">
+    <div class="hyp-label">PS Rendement Mémoire Euribor</div>
+    <div class="hyp-value" id="valC">5 000 €</div>
+    <div class="hyp-sub">Moyen/long terme · 5,8 % net / an</div>
+    <input type="range" class="hyp-mini-slider" id="sliderC" min="0" max="25000" step="500" value="5000">
+    <div class="hyp-mini-range"><span>0 €</span><span>25 000 €</span></div>
+  </div>
+
+  <div class="hyp-card product">
+    <div class="hyp-label">ETF MSCI World</div>
+    <div class="hyp-value" id="valD">5 000 €</div>
+    <div class="hyp-sub">Moyen terme · 15 % net / an</div>
+    <input type="range" class="hyp-mini-slider" id="sliderD" min="0" max="25000" step="500" value="5000">
+    <div class="hyp-mini-range"><span>0 €</span><span>25 000 €</span></div>
+  </div>
+
+  <!-- CARTE RENDEMENT PONDÉRÉ -->
+  <div class="hyp-card weighted">
+    <div class="hyp-label">Rendement annuel pondéré</div>
+    <div class="hyp-value" id="weightedRate">—</div>
+    <div class="hyp-sub">Net / an · selon la répartition actuelle</div>
+
+  </div>
+</div>
+
+<div class="reset-row">
+  <button class="reset-btn" id="resetBtn">Réinitialiser la répartition</button>
+</div>
+
+<div class="slider-zone">
+  <div class="slider-label-group">
+    <div class="slider-main-label">Horizon de projection</div>
+    <div class="slider-hint">Faites glisser pour choisir la durée</div>
+  </div>
+  <div class="slider-control">
+    <input type="range" id="yearSlider" min="1" max="30" value="10" step="1">
+  </div>
+  <div class="year-display">
+    <div class="year-bubble" id="yearBubble">10</div>
+    <div class="year-suffix">ans</div>
+  </div>
+</div>
+
+<div class="chart-section">
+  <div class="chart-header">
+    <div class="chart-title">Évolution du capital dans le temps</div>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#00A88F;"></div>
+        Capital projeté
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:rgba(17,24,39,0.12);border:1px solid rgba(17,24,39,0.25);"></div>
+        Capital investi
+      </div>
+    </div>
+  </div>
+  <div class="chart-wrap">
+    <canvas id="projChart" role="img" aria-label="Courbe de projection du capital de Régis Delhommeau sur la durée sélectionnée"></canvas>
+  </div>
+</div>
+
+<div class="kpi-section">
+  <div class="kpi-card">
+    <div class="kpi-label">Capital investi</div>
+    <div class="kpi-value" id="kpiInvested">25 000 €</div>
+    <div class="kpi-delta">Capital initial · aucun versement</div>
+  </div>
+  <div class="kpi-card accent">
+    <div class="kpi-label">Capital projeté</div>
+    <div class="kpi-value" id="kpiProjected">—</div>
+    <div class="kpi-delta" id="kpiHorizon">Dans 10 ans</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Gain estimé</div>
+    <div class="kpi-value" id="kpiGain">—</div>
+    <div class="kpi-delta" id="kpiGainPct">Performance de la stratégie</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const TOTAL_CAPITAL = 25000;
+const DEFAULTS = { A: 10000, B: 5000, C: 5000, D: 5000 };
+const RATES    = { A: 0.034, B: 0.085, C: 0.058, D: 0.15 };
+const KEYS = ['A', 'B', 'C', 'D'];
+
+const sliders = {
+  A: document.getElementById('sliderA'),
+  B: document.getElementById('sliderB'),
+  C: document.getElementById('sliderC'),
+  D: document.getElementById('sliderD')
+};
+const valEls = {
+  A: document.getElementById('valA'),
+  B: document.getElementById('valB'),
+  C: document.getElementById('valC'),
+  D: document.getElementById('valD')
+};
+
+let amounts = { ...DEFAULTS };
+
+function fmt(n) {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency', currency: 'EUR', maximumFractionDigits: 0
+  }).format(Math.round(n));
+}
+
+function rebalance(changedKey, newValue) {
+  newValue = Math.max(0, Math.min(TOTAL_CAPITAL, Math.round(newValue / 500) * 500));
+  const others = KEYS.filter(k => k !== changedKey);
+  const oldOthersSum = others.reduce((s, k) => s + amounts[k], 0);
+  let remaining = TOTAL_CAPITAL - newValue;
+
+  if (oldOthersSum === 0) {
+    const share = Math.floor(remaining / others.length);
+    others.forEach((k, i) => {
+      amounts[k] = (i === others.length - 1) ? remaining - share * (others.length - 1) : share;
+    });
+  } else {
+    let assigned = 0;
+    others.forEach((k, i) => {
+      if (i === others.length - 1) {
+        amounts[k] = Math.max(0, remaining - assigned);
+      } else {
+        const portion = Math.round((amounts[k] / oldOthersSum) * remaining / 500) * 500;
+        const capped = Math.max(0, Math.min(portion, remaining - assigned));
+        amounts[k] = capped;
+        assigned += capped;
+      }
+    });
+  }
+
+  amounts[changedKey] = newValue;
+
+  const sum = KEYS.reduce((s, k) => s + amounts[k], 0);
+  const diff = TOTAL_CAPITAL - sum;
+  if (diff !== 0) {
+    const adjustKey = others[others.length - 1];
+    amounts[adjustKey] = Math.max(0, amounts[adjustKey] + diff);
+  }
+}
+
+function updateWeightedCard() {
+  const total = KEYS.reduce((s, k) => s + amounts[k], 0) || TOTAL_CAPITAL;
+  const weighted = KEYS.reduce((s, k) => s + (amounts[k] / total) * RATES[k], 0);
+  document.getElementById('weightedRate').textContent = (weighted * 100).toFixed(2).replace('.', ',') + ' %';
+
+
+}
+
+function compute(years) {
+  const labels = [], projected = [], invested = [];
+  for (let y = 0; y <= years; y++) {
+    labels.push(y === 0 ? "Aujourd'hui" : 'An ' + y);
+    projected.push(Math.round(
+      amounts.A * Math.pow(1 + RATES.A, y) +
+      amounts.B * Math.pow(1 + RATES.B, y) +
+      amounts.C * Math.pow(1 + RATES.C, y) +
+      amounts.D * Math.pow(1 + RATES.D, y)
+    ));
+    invested.push(TOTAL_CAPITAL);
+  }
+  return { labels, projected, invested };
+}
+
+let chart;
+let currentYears = 10;
+
+function buildChart(years) {
+  currentYears = years;
+  const { labels, projected, invested } = compute(years);
+  const ctx = document.getElementById('projChart').getContext('2d');
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Capital projeté',
+          data: projected,
+          borderColor: '#00A88F',
+          backgroundColor: 'rgba(0,168,143,0.10)',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#00A88F',
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 2,
+          fill: true,
+          tension: 0.35
+        },
+        {
+          label: 'Capital investi',
+          data: invested,
+          borderColor: 'rgba(17,24,39,0.22)',
+          backgroundColor: 'rgba(17,24,39,0.03)',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: true,
+          tension: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#ffffff',
+          borderColor: 'rgba(0,168,143,0.3)',
+          borderWidth: 1,
+          titleColor: 'rgba(17,24,39,0.5)',
+          bodyColor: '#111827',
+          titleFont: { family: 'Outfit', size: 11, weight: '500' },
+          bodyFont: { family: 'Outfit', size: 13, weight: '700' },
+          padding: 14,
+          callbacks: {
+            label: ctx => '  ' + ctx.dataset.label + ' : ' +
+              new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(ctx.parsed.y)
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(17,24,39,0.06)', drawBorder: false },
+          ticks: { color: 'rgba(17,24,39,0.35)', font: { family: 'Outfit', size: 11 }, maxTicksLimit: 12, maxRotation: 0 },
+          border: { display: false }
+        },
+        y: {
+          grid: { color: 'rgba(17,24,39,0.06)', drawBorder: false },
+          ticks: {
+            color: 'rgba(17,24,39,0.35)',
+            font: { family: 'Outfit', size: 11 },
+            callback: v => {
+              if (v >= 1000000) return (v / 1000000).toFixed(1).replace('.', ',') + ' M€';
+              if (v >= 1000)    return (v / 1000).toFixed(0) + ' k€';
+              return v + ' €';
+            }
+          },
+          border: { display: false }
+        }
+      }
+    }
+  });
+
+  const finalProj = projected[years];
+  const gain = finalProj - TOTAL_CAPITAL;
+  const gainPct = ((gain / TOTAL_CAPITAL) * 100).toFixed(1);
+
+  document.getElementById('kpiInvested').textContent  = fmt(TOTAL_CAPITAL);
+  document.getElementById('kpiProjected').textContent = fmt(finalProj);
+  document.getElementById('kpiHorizon').textContent   = 'Dans ' + years + ' an' + (years > 1 ? 's' : '');
+  document.getElementById('kpiGain').textContent      = (gain >= 0 ? '+' : '') + fmt(gain);
+  document.getElementById('kpiGainPct').textContent   = (gain >= 0 ? '+' : '') + gainPct + ' % de performance estimée';
+}
+
+function syncUI() {
+  KEYS.forEach(k => {
+    sliders[k].value = amounts[k];
+    valEls[k].textContent = fmt(amounts[k]);
+    sliders[k].style.setProperty('--pct', (amounts[k] / TOTAL_CAPITAL * 100).toFixed(1) + '%');
+  });
+  document.getElementById('totalValue').textContent = fmt(TOTAL_CAPITAL);
+  updateWeightedCard();
+  buildChart(currentYears);
+}
+
+KEYS.forEach(k => {
+  sliders[k].addEventListener('input', () => {
+    rebalance(k, parseInt(sliders[k].value));
+    syncUI();
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  amounts = { ...DEFAULTS };
+  syncUI();
+});
+
+const yearSlider = document.getElementById('yearSlider');
+function updateYear() {
+  const y = parseInt(yearSlider.value);
+  document.getElementById('yearBubble').textContent = y;
+  yearSlider.style.setProperty('--pct', ((y - 1) / 29 * 100).toFixed(1) + '%');
+  buildChart(y);
+}
+yearSlider.addEventListener('input', updateYear);
+
+syncUI();
+updateYear();
+</script>
+</body>
+</html>
